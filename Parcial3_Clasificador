@@ -1,0 +1,87 @@
+!pip install gradio transformers
+
+from transformers import pipeline, AutoTokenizer, AutoModelForSequenceClassification
+import gradio as gr
+
+# Cargar el tokenizer y el modelo
+tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")  # Cambia si usas un tokenizer diferente
+model = AutoModelForSequenceClassification.from_pretrained("Esmarguz/econ-classifier-multitopic")
+
+# Crear el pipeline para la clasificación
+pipe = pipeline("text-classification", model=model, tokenizer=tokenizer, function_to_apply="sigmoid", top_k=None)
+
+# Diccionario de etiquetas originales
+etiquetas_originales = {
+    0: "Macroeconomía",
+    1: "Microeconomía",
+    2: "Econometría",
+    3: "Laboral",
+    4: "Internacional",
+    5: "Desarrollo",
+    6: "Pública",
+    7: "Ambiental",
+    8: "Salud",
+    9: "Financiera",
+    10: "Comportamental",
+    11: "Sostenibilidad"
+}
+
+# Función para convertir las predicciones
+def convertir_predicciones(resultados, umbral=0.3):
+    if isinstance(resultados, list) and isinstance(resultados[0], list):
+        resultados = resultados[0]
+
+    probabilidades_con_etiquetas = {
+        etiquetas_originales[int(item['label'].replace('LABEL_', ''))]: item['score']
+        for item in resultados
+        if item['score'] >= umbral
+    }
+
+    etiquetas_predichas = sorted(probabilidades_con_etiquetas.items(), key=lambda x: x[1], reverse=True)[:3]
+
+    return dict(etiquetas_predichas)
+
+# Función chatbot
+def chatbot(abstract):
+    """
+    Clasifica un abstract en categorías económicas usando el modelo cargado.
+
+    Args:
+        abstract (str): Abstract del artículo científico.
+
+    Returns:
+        tuple: Categoría principal y un resumen.
+    """
+    # Obtener resultados del modelo
+    resultados = pipe(abstract)
+    
+    # Convertir las predicciones
+    etiquetas_predichas = convertir_predicciones(resultados)
+    
+    # Obtener la categoría principal y un resumen
+    categoria_principal = max(etiquetas_predichas, key=etiquetas_predichas.get)
+    resumen = f"El abstract está relacionado principalmente con {categoria_principal}."
+    
+    return categoria_principal, resumen
+
+# Configurar la interfaz con Gradio
+interface = gr.Interface(
+    fn=chatbot,  # Función que procesa el abstract
+    inputs=[
+        gr.Textbox(
+            placeholder="Ingresa el abstract del paper aquí",
+            label="Abstract",
+            lines=5  # Número de líneas visibles en el textbox
+        )
+    ],
+    outputs=[
+        gr.Textbox(label="Categoría Principal"),  # Salida de la categoría principal
+        gr.Textbox(label="Resumen")  # Salida del resumen
+    ],
+    title="Clasificador de Abstracts Económicos",
+    description="Inserta el abstract de un paper para obtener la categoría más relevante y un resumen.",
+)
+
+# Iniciar la interfaz
+if __name__ == "__main__":
+    interface.launch()
