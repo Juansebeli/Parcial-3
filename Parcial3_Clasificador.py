@@ -2,6 +2,7 @@
 
 from transformers import pipeline, AutoTokenizer, AutoModelForSequenceClassification
 import gradio as gr
+import pandas as pd  
 
 # Cargar el tokenizer y el modelo
 tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")  # Cambia si usas un tokenizer diferente
@@ -26,6 +27,11 @@ etiquetas_originales = {
     11: "Sostenibilidad"
 }
 
+# === CONFIGURACIÓN DEL CHATBOT ===
+idea_generation = pipeline("summarization", 
+                           model="facebook/bart-large-cnn"
+                           )
+
 # Función para convertir las predicciones
 def convertir_predicciones(resultados, umbral=0.3):
     if isinstance(resultados, list) and isinstance(resultados[0], list):
@@ -41,28 +47,42 @@ def convertir_predicciones(resultados, umbral=0.3):
 
     return dict(etiquetas_predichas)
 
+
 # Función chatbot
 def chatbot(abstract):
-    """
-    Clasifica un abstract en categorías económicas usando el modelo cargado.
-
-    Args:
-        abstract (str): Abstract del artículo científico.
-
-    Returns:
-        tuple: Categoría principal y un resumen.
-    """
-    # Obtener resultados del modelo
+    # Simulando el modelo que devuelve un resumen y categorías
+    resumen = idea_generation(abstract, max_length=130, min_length=30, do_sample=False)[0]['summary_text']
+    
+    ## Obtener resultados del modelo
     resultados = pipe(abstract)
     
     # Convertir las predicciones
     etiquetas_predichas = convertir_predicciones(resultados)
-    
+
     # Obtener la categoría principal y un resumen
     categoria_principal = max(etiquetas_predichas, key=etiquetas_predichas.get)
-    resumen = f"El abstract está relacionado principalmente con {categoria_principal}."
+    porcentaje_categoria_principal = etiquetas_predichas[categoria_principal]
     
-    return categoria_principal, resumen
+    # Obtener las otras dos categorías
+    segunda_categoria = sorted(etiquetas_predichas, key=etiquetas_predichas.get, reverse=True)[1]
+    tercera_categoria = sorted(etiquetas_predichas, key=etiquetas_predichas.get, reverse=True)[2]
+    
+    lista_categorias = [categoria_principal, segunda_categoria, tercera_categoria]
+    lista_porcentajes = [round(porcentaje_categoria_principal * 100, 1), 
+                         round(etiquetas_predichas[segunda_categoria] * 100, 1), 
+                         round(etiquetas_predichas[tercera_categoria] * 100, 1)]
+    
+
+    
+    
+    # Crear un DataFrame para mostrarlo en una tabla
+    df = pd.DataFrame({
+        "Categoría": lista_categorias,
+        "Porcentaje": lista_porcentajes
+    })
+    
+    # Retornar las categorías, los porcentajes y el resumen
+    return df, resumen
 
 # Configurar la interfaz con Gradio
 interface = gr.Interface(
@@ -75,11 +95,11 @@ interface = gr.Interface(
         )
     ],
     outputs=[
-        gr.Textbox(label="Categoría Principal"),  # Salida de la categoría principal
+        gr.DataFrame(label="Categorías y Porcentajes"),  # Salida de la tabla
         gr.Textbox(label="Resumen")  # Salida del resumen
     ],
     title="Clasificador de Abstracts Económicos",
-    description="Inserta el abstract de un paper para obtener la categoría más relevante y un resumen.",
+    description="Inserta el abstract de un paper para obtener las tres categorías más relevantes, sus porcentajes y un resumen.",
 )
 
 # Iniciar la interfaz
