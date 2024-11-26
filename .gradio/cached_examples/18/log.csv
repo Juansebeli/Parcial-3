@@ -1,0 +1,6 @@
+Respuesta del Chatbot,Sentimiento de tu mensaje,Confianza del análisis (%),timestamp
+Error: invalid literal for int() with base 10: 'cpu',"{""label"": ""Error en el an\u00e1lisis"", ""confidences"": null}",0.0,2024-11-25 12:28:36.798271
+Error: invalid literal for int() with base 10: 'cpu',"{""label"": ""Error en el an\u00e1lisis"", ""confidences"": null}",0.0,2024-11-25 12:28:36.805149
+Error: invalid literal for int() with base 10: 'cpu',"{""label"": ""Error en el an\u00e1lisis"", ""confidences"": null}",0.0,2024-11-25 12:28:36.809552
+Error: invalid literal for int() with base 10: 'cpu',"{""label"": ""Error en el an\u00e1lisis"", ""confidences"": null}",0.0,2024-11-25 12:28:36.813377
+Error: invalid literal for int() with base 10: 'cpu',"{""label"": ""Error en el an\u00e1lisis"", ""confidences"": null}",0.0,2024-11-25 12:28:36.818782
