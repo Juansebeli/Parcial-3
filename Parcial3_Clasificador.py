@@ -1,4 +1,4 @@
-!pip install gradio transformers
+#!pip install gradio transformers
 
 from transformers import pipeline, AutoTokenizer, AutoModelForSequenceClassification
 import gradio as gr
