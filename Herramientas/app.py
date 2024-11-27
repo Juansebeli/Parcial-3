@@ -32,7 +32,7 @@ def chatbot(titulo):
         # Generar respuesta del chatbot con el título
         respuesta = chat_generator(
             titulo,
-            max_length=10000,
+            max_length=500,
             temperature=0.7,
             do_sample=True,
             top_p=0.95,
@@ -159,7 +159,7 @@ def interfaz_completa():
                 ],
                 allow_flagging="never",
                 cache_examples=True
-            ).launch(share=True, debug=True)
+            )
 
         with gr.Tab("Clasificador de Abstracts Económicos"):
             gr.Interface(
@@ -177,9 +177,10 @@ def interfaz_completa():
                 ],
                 title="Clasificador de Abstracts Económicos",
                 description="Inserta el abstract de un paper para obtener las tres categorías más relevantes, sus porcentajes y un resumen.",
-            ).launch(share=True, debug=True)
+            )
 
     demo.launch(share=True)
+
 
 # Ejecutar la interfaz
 if __name__ == "__main__":
